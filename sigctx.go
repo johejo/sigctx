@@ -8,7 +8,6 @@ import (
 	"context"
 	"os"
 	"os/signal"
-	"time"
 )
 
 // NotifyContext returns a copy of the parent context that is marked done
@@ -29,13 +28,13 @@ import (
 func NotifyContext(parent context.Context, signals ...os.Signal) (ctx context.Context, stop context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 	c := &signalCtx{
-		parent:  ctx,
+		Context: ctx,
 		cancel:  cancel,
 		signals: signals,
 	}
+	c.ch = make(chan os.Signal, 1)
+	signal.Notify(c.ch, c.signals...)
 	if ctx.Err() == nil {
-		c.ch = make(chan os.Signal, 1)
-		signal.Notify(c.ch, c.signals...)
 		go func() {
 			select {
 			case <-c.ch:
@@ -48,7 +47,7 @@ func NotifyContext(parent context.Context, signals ...os.Signal) (ctx context.Co
 }
 
 type signalCtx struct {
-	parent context.Context
+	context.Context
 
 	cancel  context.CancelFunc
 	signals []os.Signal
@@ -60,33 +59,25 @@ func (c *signalCtx) stop() {
 	signal.Stop(c.ch)
 }
 
+type stringer interface {
+	String() string
+}
+
 func (c *signalCtx) String() string {
 	var buf []byte
-	buf = append(buf, "signal.NotifyContext(parent"...)
+	name := c.Context.(stringer).String()
+	name = name[:len(name)-len(".WithCancel")]
+	buf = append(buf, "signal.NotifyContext("+name...)
 	if len(c.signals) != 0 {
 		buf = append(buf, ", ["...)
-		for _, s := range c.signals {
+		for i, s := range c.signals {
 			buf = append(buf, s.String()...)
-			buf = append(buf, ' ')
+			if i != len(c.signals)-1 {
+				buf = append(buf, ' ')
+			}
 		}
 		buf = append(buf, ']')
 	}
 	buf = append(buf, ')')
 	return string(buf)
-}
-
-func (c *signalCtx) Deadline() (deadline time.Time, ok bool) {
-	return c.parent.Deadline()
-}
-
-func (c *signalCtx) Done() <-chan struct{} {
-	return c.parent.Done()
-}
-
-func (c *signalCtx) Err() error {
-	return c.parent.Err()
-}
-
-func (c *signalCtx) Value(key interface{}) interface{} {
-	return c.parent.Value(key)
 }
