@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
+// Copyright 2020 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build aix darwin dragonfly freebsd js,wasm linux netbsd openbsd solaris
+// +build aix darwin dragonfly freebsd linux netbsd openbsd solaris
 
 package sigctx_test
 
@@ -19,8 +19,6 @@ import (
 // This example passes a context with a signal to tell a blocking function that
 // it should abandon its work after a signal is received.
 func ExampleNotifyContext() {
-	// Pass a context with a timeout to tell a blocking function that it
-	// should abandon its work after the timeout elapses.
 	ctx, stop := sigctx.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
@@ -29,10 +27,11 @@ func ExampleNotifyContext() {
 		log.Fatal(err)
 	}
 
-	// On a Unix-like system, pressing Ctrl+C on a keyboard sends the SIGINT signal to the process of the program in execution.
-	// This example simulates it by sending a SIGINT signal to itself.
-	p.Signal(os.Interrupt)
-	if err != nil {
+	// On a Unix-like system, pressing Ctrl+C on a keyboard sends a
+	// SIGINT signal to the process of the program in execution.
+	//
+	// This example simulates that by sending a SIGINT signal to itself.
+	if err := p.Signal(os.Interrupt); err != nil {
 		log.Fatal(err)
 	}
 
