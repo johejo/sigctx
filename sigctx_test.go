@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"os/signal"
-	"strings"
 	"sync"
 	"syscall"
 	"testing"
@@ -21,8 +20,8 @@ func TestNotifyContext(t *testing.T) {
 	c, stop := NotifyContext(context.Background(), syscall.SIGINT)
 	defer stop()
 
-	if got, prefix := fmt.Sprint(c), "signal.NotifyContext("; !strings.HasPrefix(got, prefix) {
-		t.Errorf("c.String() = %q, want prefix %q", got, prefix)
+	if want, got := "signal.NotifyContext(context.Background, [interrupt])", fmt.Sprint(c); want != got {
+		t.Errorf("c.String() = %q, want %q", got, want)
 	}
 
 	syscall.Kill(syscall.Getpid(), syscall.SIGINT)
@@ -52,8 +51,8 @@ func TestNotifyContextStop(t *testing.T) {
 		t.Errorf("expected SIGHUP to not be ignored.")
 	}
 
-	if got, prefix := fmt.Sprint(c), "signal.NotifyContext("; !strings.HasPrefix(got, prefix) {
-		t.Errorf("c.String() = %q, want prefix %q", got, prefix)
+	if want, got := "signal.NotifyContext(context.Background.WithCancel, [hangup])", fmt.Sprint(c); want != got {
+		t.Errorf("c.String() = %q, wanted %q", got, want)
 	}
 
 	stop()
@@ -73,8 +72,8 @@ func TestNotifyContextCancelParent(t *testing.T) {
 	c, stop := NotifyContext(parent, syscall.SIGINT)
 	defer stop()
 
-	if got, prefix := fmt.Sprint(c), "signal.NotifyContext("; !strings.HasPrefix(got, prefix) {
-		t.Errorf("c.String() = %q, want prefix %q", got, prefix)
+	if want, got := "signal.NotifyContext(context.Background.WithCancel, [interrupt])", fmt.Sprint(c); want != got {
+		t.Errorf("c.String() = %q, want %q", got, want)
 	}
 
 	cancelParent()
@@ -96,8 +95,8 @@ func TestNotifyContextPrematureCancelParent(t *testing.T) {
 	c, stop := NotifyContext(parent, syscall.SIGINT)
 	defer stop()
 
-	if got, prefix := fmt.Sprint(c), "signal.NotifyContext("; !strings.HasPrefix(got, prefix) {
-		t.Errorf("c.String() = %q, want prefix %q", got, prefix)
+	if want, got := "signal.NotifyContext(context.Background.WithCancel, [interrupt])", fmt.Sprint(c); want != got {
+		t.Errorf("c.String() = %q, want %q", got, want)
 	}
 
 	select {
@@ -114,8 +113,8 @@ func TestNotifyContextSimultaneousNotifications(t *testing.T) {
 	c, stop := NotifyContext(context.Background(), syscall.SIGINT)
 	defer stop()
 
-	if got, prefix := fmt.Sprint(c), "signal.NotifyContext("; !strings.HasPrefix(got, prefix) {
-		t.Errorf("c.String() = %q, want prefix %q", got, prefix)
+	if want, got := "signal.NotifyContext(context.Background, [interrupt])", fmt.Sprint(c); want != got {
+		t.Errorf("c.String() = %q, want %q", got, want)
 	}
 
 	var wg sync.WaitGroup
@@ -142,8 +141,8 @@ func TestNotifyContextSimultaneousStop(t *testing.T) {
 	c, stop := NotifyContext(context.Background(), syscall.SIGINT)
 	defer stop()
 
-	if got, prefix := fmt.Sprint(c), "signal.NotifyContext("; !strings.HasPrefix(got, prefix) {
-		t.Errorf("c.String() = %q, want prefix %q", got, prefix)
+	if want, got := "signal.NotifyContext(context.Background, [interrupt])", fmt.Sprint(c); want != got {
+		t.Errorf("c.String() = %q, want %q", got, want)
 	}
 
 	var wg sync.WaitGroup
