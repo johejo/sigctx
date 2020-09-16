@@ -65,6 +65,8 @@ type stringer interface {
 
 func (c *signalCtx) String() string {
 	var buf []byte
+	// We know that the type of c.Context is context.cancelCtx, and we know that the
+	// String method of cancelCtx returns a string that ends with ".WithCancel".
 	name := c.Context.(stringer).String()
 	name = name[:len(name)-len(".WithCancel")]
 	buf = append(buf, "signal.NotifyContext("+name...)
